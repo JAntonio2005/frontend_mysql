@@ -1,8 +1,8 @@
 name: CI/CD deploy master
 on: 
-  #push:
+  push:
   #  branches: [ "master"]
-  pull_request:
+  #pull_request:
     branches: [ "master"]
 jobs:
   ci_cd_deploy_master:
@@ -12,22 +12,7 @@ jobs:
       - run: ls -la
       - uses: actions/checkout@v2
       - run: ls -la
-      - run: git branch   
-     # - run: git checkout deploy-release   
-      
       - run: echo 'hello universe'
-      - name: Use Node.js 20.x
-        uses: actions/setup-node@v1
-        with:
-          node-version: 20.x
-
-      - name: install dependencies 
-        run: npm ci
-
- 
-      - name: list dir
-        run: ls -la dist/mycv/browser
-
       - name: download, run httpd image
         run:  | 
           docker run -d --name serving_base httpd
@@ -36,9 +21,9 @@ jobs:
         run:  | 
           docker ps
 
-      - name: cp index.html, callresapi.js  to container
+      - name: cp index.html, callrestapi.js  to container
         run:  | 
-          docker cp  serving_base:/usr/local/apache2/htdocs
+          docker cp . serving_base:/usr/local/apache2/htdocs
 
       - name: list container
         run:  | 
@@ -59,4 +44,4 @@ jobs:
         run:  docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
         
       - name: docker push
-        run:  docker push ${{ secrets.DOCKER_USER}}/${{secrets.MODEL_NAME}}:${{github.sha}}       
+        run:  docker push ${{ secrets.DOCKER_USER}}/${{secrets.MODEL_NAME}}:${{github.sha}}      

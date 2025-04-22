@@ -1,47 +1,41 @@
-name: CI/CD deploy master
-on: 
+name: Build and Deploy Frontend to Docker
+
+on:
   push:
-  #  branches: [ "master"]
-  #pull_request:
-    branches: [ "master"]
+    branches:
+      - master  # Este workflow se ejecutará cuando haya un push a la rama master
+
 jobs:
-  ci_cd_deploy_master:
+  build:
     runs-on: ubuntu-latest
-
+    
     steps:
-      - run: ls -la
-      - uses: actions/checkout@v2
-      - run: ls -la
-      - run: echo 'hello universe'
-      - name: download, run httpd image
-        run:  | 
-          docker run -d --name serving_base httpd
+      # Paso 1: Checkout del código
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - name: docker ps
-        run:  | 
-          docker ps
+      # Paso 2: Configurar Docker Buildx (para construir imágenes Docker)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-      - name: cp index.html, callrestapi.js  to container
-        run:  | 
-          docker cp . serving_base:/usr/local/apache2/htdocs
-
-      - name: list container
-        run:  | 
-          docker exec serving_base ls -la /usr/local/apache2/htdocs
-
-      - name: build custom docker image
-        run:  docker commit --change  "ENV MODEL_NAME  ${{ secrets.MODEL_NAME }}"
-              serving_base ${{ secrets.DOCKER_USER}}/${{secrets.MODEL_NAME}}:${{github.sha}}       
-     
-      - name: list images
-        run:  | 
-          docker images
-
-      - name: docker login
-        env:
-          DOCKER_USER: ${{secrets.DOCKER_USER}}
-          DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
-        run:  docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+      # Paso 3: Loguearse en Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USER }}  # Usa el secret DOCKER_USERNAME
+          password: ${{ secrets.DOCKER_PASSWORD }}  # Usa el secret DOCKER_PASSWORD
         
-      - name: docker push
-        run:  docker push ${{ secrets.DOCKER_USER}}/${{secrets.MODEL_NAME}}:${{github.sha}}      
+      # Paso 4: Construir la imagen Docker para el frontend
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USER }}/mysql-front-api:${{ github.sha }} .
+        
+      # Paso 5: Verificar las imágenes Docker generadas
+      - name: List Docker images
+        run: |
+          docker images
+        
+      # Paso 6: Subir la imagen Docker a Docker Hub
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.DOCKER_USER }}/mysql-front-api:${{ github.sha }}

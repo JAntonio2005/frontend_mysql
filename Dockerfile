@@ -1,11 +1,11 @@
-# Usa la imagen oficial de Nginx para servir archivos estáticos
+# Usa una imagen base de Nginx para servir el frontend
 FROM nginx:alpine
 
-# Copia los archivos del frontend (suponiendo que los archivos estén en una carpeta `dist/` después de la compilación)
-COPY ./dist /usr/share/nginx/html
+# Copia los archivos del frontend (como index.html, css, js) al contenedor
+COPY ./ /usr/share/nginx/html
 
-# Expone el puerto 80 para poder acceder a la aplicación desde fuera del contenedor
+# Expone el puerto 80 para acceder a la aplicación desde fuera del contenedor
 EXPOSE 80
 
-# Configura Nginx para servir los archivos estáticos
+# Comando para mantener Nginx corriendo
 CMD ["nginx", "-g", "daemon off;"]

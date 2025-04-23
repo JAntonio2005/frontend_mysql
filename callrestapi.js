@@ -1,4 +1,4 @@
-var url = "http://localhost:3000/api/users"; // Cambia la URL según tu configuración
+var url = "https://mysql-restapi-emkl.onrender.com/api/users"; // Cambia la URL según tu configuración
 let selectedUserId = null;
 
 function postUser() {

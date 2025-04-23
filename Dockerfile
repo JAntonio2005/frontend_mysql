@@ -1,11 +1,13 @@
-# Usa una imagen base de Nginx para servir el frontend
 FROM nginx:alpine
 
-# Copia los archivos del frontend (como index.html, css, js) al contenedor
+# Limpia archivos default de Nginx
+RUN rm -rf /usr/share/nginx/html/*
+
+# Copia el contenido de tu frontend
 COPY ./ /usr/share/nginx/html
 
-# Expone el puerto 80 para acceder a la aplicación desde fuera del contenedor
+# Expone el puerto 80
 EXPOSE 80
 
-# Comando para mantener Nginx corriendo
+# Mantiene nginx corriendo en foreground
 CMD ["nginx", "-g", "daemon off;"]

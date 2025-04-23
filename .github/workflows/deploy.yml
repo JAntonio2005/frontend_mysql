@@ -1,41 +1,34 @@
-name: Build and Deploy Frontend to Docker
+name: Deploy-frontend-nginx
 
 on:
   push:
-    branches:
-      - master  # Este workflow se ejecutará cuando haya un push a la rama master
+    branches: ["master"]
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
-    
+
     steps:
-      # Paso 1: Checkout del código
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
 
-      # Paso 2: Configurar Docker Buildx (para construir imágenes Docker)
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+      - name: Build imagen de frontend
+        run: |
+          docker build -t ${{ secrets.DOCKER_USER }}/${{ secrets.MODEL_NAME }}:${{ github.sha }} .
 
-      # Paso 3: Loguearse en Docker Hub
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USER }}  # Usa el secret DOCKER_USERNAME
-          password: ${{ secrets.DOCKER_PASSWORD }}  # Usa el secret DOCKER_PASSWORD
-        
-      # Paso 4: Construir la imagen Docker para el frontend
-      - name: Build Docker image
+      - name: Etiquetar imagen como latest
         run: |
-          docker build -t ${{ secrets.DOCKER_USER }}/mysql-front-api:${{ github.sha }} .
-        
-      # Paso 5: Verificar las imágenes Docker generadas
-      - name: List Docker images
-        run: |
-          docker images
-        
-      # Paso 6: Subir la imagen Docker a Docker Hub
-      - name: Push Docker image
-        run: |
-          docker push ${{ secrets.DOCKER_USER }}/mysql-front-api:${{ github.sha }}
+          docker tag ${{ secrets.DOCKER_USER }}/${{ secrets.MODEL_NAME }}:${{ github.sha }} \
+                     ${{ secrets.DOCKER_USER }}/${{ secrets.MODEL_NAME }}:latest
+
+      - name: Login en Docker Hub
+        env:
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+
+      - name: Push imagen con SHA
+        run: docker push ${{ secrets.DOCKER_USER }}/${{ secrets.MODEL_NAME }}:${{ github.sha }}
+
+      - name: Push imagen como latest
+        run: docker push ${{ secrets.DOCKER_USER }}/${{ secrets.MODEL_NAME }}:latest
